@@ -126,10 +126,16 @@ bare() {
     mkdir -p "$(dirname "$DIARY")"
     touch "$DIARY"
 
+    # Safety check: Ensure constitution.md exists before proceeding
+    if [ ! -f "$CONSTITUTION" ]; then
+        echo -e "${RED}Error: Constitution file not found at $CONSTITUTION. Exiting.${NC}"
+        exit 1
+    fi
+
     # Initialize Gemini with Mission + Current Diary Context
     # Fetch constitution content and replace the {{DATE}} placeholder.
     local constitution_content
-    constitution_content=$(cat "$CONSTITUTION" | sed "s/{{DATE}}/$TODAY/")
+    constitution_content=$(cat "$CONSTITUTION" | sed "s|{{DATE}}|$TODAY|")
     
     # Pass the modified constitution content to Gemini
     # Ensure GEMINI_API_KEY is set before running this command.
@@ -195,10 +201,16 @@ bare() {
     mkdir -p "$(dirname "$DIARY")"
     touch "$DIARY"
 
+    # Safety check: Ensure constitution.md exists before proceeding
+    if [ ! -f "$CONSTITUTION" ]; then
+        echo -e "${RED}Error: Constitution file not found at $CONSTITUTION. Exiting.${NC}"
+        exit 1
+    fi
+
     # Initialize Gemini with Mission + Current Diary Context
     # Fetch constitution content and replace the {{DATE}} placeholder.
     local constitution_content
-    constitution_content=$(cat "$CONSTITUTION" | sed "s/{{DATE}}/$TODAY/")
+    constitution_content=$(cat "$CONSTITUTION" | sed "s|{{DATE}}|$TODAY|")
     
     # Pass the modified constitution content to Gemini
     # Ensure GEMINI_API_KEY is set before running this command.
@@ -255,7 +267,7 @@ fi
 
 # --- Handle Gemini CLI Function ---
 # Check if the bare function already exists in .bashrc to avoid duplication
-if grep -q "^bare() {" "$BASHRC_FILE"; then
+if grep -q "^# The BARE-AI Loader" "$BASHRC_FILE"; then
     echo -e "${YELLOW}BARE-AI function 'bare()' already found in $BASHRC_FILE. Skipping addition.${NC}"
 else
     # Append the function to .bashrc
