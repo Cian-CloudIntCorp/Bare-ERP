@@ -255,7 +255,7 @@ fi
 
 # --- Handle Gemini CLI Function ---
 # Check if the bare function already exists in .bashrc to avoid duplication
-if grep -q "^bare() {" "$BASHRC_FILE"; then
+if grep -q "^bare\(\)s*{" "$BASHRC_FILE"; then
     echo -e "${YELLOW}BARE-AI function 'bare()' already found in $BASHRC_FILE. Skipping addition.${NC}"
 else
     # Append the function to .bashrc
