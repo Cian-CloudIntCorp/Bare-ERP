@@ -54,7 +54,7 @@ if ! command -v gemini &> /dev/null; then
         exit 1
     fi
 else
-    echo -e "${GREEN}Gemini CLI found.${NC}
+    echo -e "${GREEN}Gemini CLI found.${NC}"
 fi
 
 # --- Create Directory Structure ---
@@ -292,5 +292,5 @@ echo -e "${YELLOW}After adding this line, run 'source $BASHRC_FILE' in your term
 
 
 echo -e "\n${GREEN}BARE-AI setup script finished.${NC}"
-echo -e "${GREEN}Please follow the instructions above for Gemini CLI installation, API key setup, and sourcing .bashrc.${NC}
+echo -e "${GREEN}Please follow the instructions above for Gemini CLI installation, API key setup, and sourcing .bashrc.${NC}"
 exit 0
