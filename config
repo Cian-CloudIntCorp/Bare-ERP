@@ -1,0 +1,25 @@
+# LXC Container Configuration for DPDK HFT App
+
+# Container name
+lxc.uts.name = hft-dpdk-container
+
+# Architecture
+lxc.arch = amd64
+
+# Root filesystem: Using a Debian 12 (bookworm) template.
+# If you have a pre-existing rootfs, specify its path here:
+# lxc.rootfs.path = dir:/path/to/your/debian12/rootfs
+
+# Networking: Using a common veth setup with lxcbr0.
+lxc.net.0.type = veth
+lxc.net.0.link = lxcbr0
+lxc.net.0.flags = up
+# Example IP address - adjust if your lxcbr0 subnet differs.
+lxc.net.0.ipv4.address = 10.0.3.100/24
+lxc.net.0.ipv4.gateway = 10.0.3.1
+
+# Security settings: May need adjustment based on system and security requirements.
+# These settings provide broader access needed for build processes and DPDK.
+lxc.cap.keep = sys_admin
+lxc.cgroup.devices.allow = a
+lxc.mount.auto = sys;proc;dev;dev/pts
