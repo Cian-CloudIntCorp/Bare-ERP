@@ -13,44 +13,64 @@ echo -e "${GREEN}Starting BARE-AI setup...${NC}"
 # --- Gemini CLI Check and Installation ---
 if ! command -v gemini &> /dev/null; then
     echo -e "${RED}Gemini CLI not found.${NC}"
-    echo -e "${YELLOW}Attempting to install Gemini CLI...${NC}"
+    echo -e "${YELLOW}Attempting to install Gemini CLI and its dependencies (pip/npm)...${NC}"
 
-    # Try installing with pip
+    # Ensure pip is installed (for google-generativeai)
+    if ! command -v pip &> /dev/null; then
+        echo -e "${YELLOW}pip not found. Attempting to install pip...${NC}"
+        if sudo apt update && sudo apt install -y python3-pip; then
+            echo -e "${GREEN}Successfully installed pip.${NC}"
+        else
+            echo -e "${RED}Failed to install pip. Please install it manually and re-run the script.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}pip is already installed.${NC}"
+    fi
+
+    # Ensure npm is installed (for @google/gemini-cli)
+    if ! command -v npm &> /dev/null; then
+        echo -e "${YELLOW}npm not found. Attempting to install npm...${NC}"
+        # Note: Node.js is usually needed for npm
+        if sudo apt update && sudo apt install -y nodejs npm; then
+            echo -e "${GREEN}Successfully installed npm.${NC}"
+        else
+            echo -e "${RED}Failed to install npm. Please install Node.js and npm manually and re-run the script.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${GREEN}npm is already installed.${NC}"
+    fi
+
+    # Now attempt to install Gemini CLI using available package managers
     if command -v pip &> /dev/null; then
-        echo -e "${YELLOW}Found pip. Attempting to install 'google-generativeai'...${NC}"
+        echo -e "${YELLOW}Using pip to install 'google-generativeai'...${NC}"
         if pip install google-generativeai; then
             echo -e "${GREEN}Successfully installed Gemini CLI via pip.${NC}"
         else
             echo -e "${RED}Failed to install Gemini CLI via pip.${NC}"
-            # Fallback: Try npm if pip failed
-            if command -v npm &> /dev/null; then
-                echo -e "${YELLOW}Found npm. Attempting to install '@google/gemini-cli' globally...${NC}"
-                if npm install -g @google/gemini-cli; then
-                    echo -e "${GREEN}Successfully installed Gemini CLI via npm.${NC}"
-                else
-                    echo -e "${RED}Failed to install Gemini CLI via npm.${NC}"
-                    echo -e "${YELLOW}Please manually install the Gemini CLI using your preferred package manager (pip or npm).${NC}"
-                    exit 1
-                fi
+            # If pip failed, we still need to try npm if available, but report pip failure
+        fi
+    fi
+
+    # Try installing with npm if it's available and pip failed or was not used
+    if command -v npm &> /dev/null; then
+        # Check if gemini command is now available after potential pip install
+        if ! command -v gemini &> /dev/null; then
+            echo -e "${YELLOW}Using npm to install '@google/gemini-cli' globally...${NC}"
+            if npm install -g @google/gemini-cli; then
+                echo -e "${GREEN}Successfully installed Gemini CLI via npm.${NC}"
             else
-                echo -e "${RED}npm not found. Cannot attempt npm installation.${NC}"
+                echo -e "${RED}Failed to install Gemini CLI via npm.${NC}"
                 echo -e "${YELLOW}Please manually install the Gemini CLI using your preferred package manager (pip or npm).${NC}"
                 exit 1
             fi
         fi
-    # Try installing with npm if pip is not available
-    elif command -v npm &> /dev/null; then
-        echo -e "${YELLOW}pip not found. Found npm. Attempting to install '@google/gemini-cli' globally...${NC}"
-        if npm install -g @google/gemini-cli; then
-            echo -e "${GREEN}Successfully installed Gemini CLI via npm.${NC}"
-        else
-            echo -e "${RED}Failed to install Gemini CLI via npm.${NC}"
-            echo -e "${YELLOW}Please manually install the Gemini CLI using your preferred package manager (pip or npm).${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Neither pip nor npm found. Cannot automatically install Gemini CLI.${NC}"
-        echo -e "${YELLOW}Please manually install the Gemini CLI using your preferred package manager (pip or npm).${NC}"
+    fi
+
+    # Final check if gemini command is available after all attempts
+    if ! command -v gemini &> /dev/null; then
+        echo -e "${RED}Gemini CLI installation failed. Please install it manually.${NC}"
         exit 1
     fi
 else
