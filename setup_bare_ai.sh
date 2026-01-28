@@ -13,68 +13,22 @@ echo -e "${GREEN}Starting BARE-AI setup...${NC}"
 # --- Gemini CLI Check and Installation ---
 if ! command -v gemini &> /dev/null; then
     echo -e "${RED}Gemini CLI not found.${NC}"
-    echo -e "${YELLOW}Attempting to install Gemini CLI and its dependencies (pip/npm)...${NC}"
+    echo -e "${YELLOW}Attempting to install Gemini CLI via npm...${NC}"
 
-    # Ensure pip is installed (for google-generativeai)
-    if ! command -v pip &> /dev/null; then
-        echo -e "${YELLOW}pip not found. Attempting to install pip...${NC}"
-        if sudo apt update && sudo apt install -y python3-pip; then
-            echo -e "${GREEN}Successfully installed pip.${NC}"
-        else
-            echo -e "${RED}Failed to install pip. Please install it manually and re-run the script.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${GREEN}pip is already installed.${NC}"
-    fi
-
-    # Ensure npm is installed (for @google/gemini-cli)
-    if ! command -v npm &> /dev/null; then
-        echo -e "${YELLOW}npm not found. Attempting to install npm...${NC}"
-        # Note: Node.js is usually needed for npm
-        if sudo apt update && sudo apt install -y nodejs npm; then
-            echo -e "${GREEN}Successfully installed npm.${NC}"
-        else
-            echo -e "${RED}Failed to install npm. Please install Node.js and npm manually and re-run the script.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${GREEN}npm is already installed.${NC}"
-    fi
-
-    # Now attempt to install Gemini CLI using available package managers
-    if command -v pip &> /dev/null; then
-        echo -e "${YELLOW}Using pip to install 'google-generativeai'...${NC}"
-        if pip install google-generativeai; then
-            echo -e "${GREEN}Successfully installed Gemini CLI via pip.${NC}"
-        else
-            echo -e "${RED}Failed to install Gemini CLI via pip.${NC}"
-            # If pip failed, we still need to try npm if available, but report pip failure
-        fi
-    fi
-
-    # Try installing with npm if it's available and pip failed or was not used
     if command -v npm &> /dev/null; then
-        # Check if gemini command is now available after potential pip install
-        if ! command -v gemini &> /dev/null; then
-            echo -e "${YELLOW}Using npm to install '@google/gemini-cli' globally...${NC}"
-            if npm install -g @google/gemini-cli; then
-                echo -e "${GREEN}Successfully installed Gemini CLI via npm.${NC}"
-            else
-                echo -e "${RED}Failed to install Gemini CLI via npm.${NC}"
-                echo -e "${YELLOW}Please manually install the Gemini CLI using your preferred package manager (pip or npm).${NC}"
-                exit 1
-            fi
+        echo -e "${YELLOW}Found npm. Attempting to install '@google/gemini-cli' globally with sudo...${NC}"
+        if sudo npm install -g @google/gemini-cli; then
+            echo -e "${GREEN}Successfully installed Gemini CLI via npm.${NC}"
+        else
+            echo -e "${RED}Failed to install Gemini CLI via npm.${NC}"
+            echo -e "${YELLOW}Please ensure you have npm installed and sufficient permissions, or install the Gemini CLI manually.${NC}"
+            exit 1
         fi
-    fi
-
-    # Final check if gemini command is available after all attempts
-    if ! command -v gemini &> /dev/null; then
-        echo -e "${RED}Gemini CLI installation failed. Please install it manually.${NC}"
+    else
+        echo -e "${RED}npm not found. Cannot automatically install Gemini CLI.${NC}"
+        echo -e "${YELLOW}Please install Node.js and npm, then manually install the Gemini CLI: npm install -g @google/gemini-cli${NC}"
         exit 1
     fi
-else
-    echo -e "${GREEN}Gemini CLI found.${NC}"
 fi
 
 # --- Create Directory Structure ---
@@ -92,7 +46,23 @@ echo -e "${GREEN}BARE-AI directories created.${NC}"
 
 # --- Create constitution.md ---
 # NOTE: {{DATE}} is a placeholder to be replaced by sed when the 'bare' command is run.
-CONSTITUTION_CONTENT="MISSION: You are an autonomous Linux Agent for \"Self-Healing\" pipelines. RULES: > 1. Use sudo DEBIAN_FRONTEND=noninteractive for updates to prevent UI hangs. 2. Always verify JSON/file integrity before reporting success. 3. Log all actions to ~/.bare-ai/diary/{{DATE}}.md."
+CONSTITUTION_CONTENT="# MISSION
+You are Bare-AI, an autonomous Linux Agent responsible for "Self-Healing" data pipelines.
+Your goal is to fix data errors, convert formats, and verify integrity using standard Linux tools.
+
+# OPERATIONAL RULES
+1. **Tool First, Think Second:** Do not guess file contents. Use `head`, `file`, or `grep` to inspect them first.
+2. **Verification:** Never assume a conversion worked. Always run a check command (e.g., `jq .` to verify JSON validity) before reporting success.
+3. **Resource Efficiency:** Do not read files larger than 1MB into your context. Use `split`, `awk`, or `sed` to process them in chunks.
+4. **Self-Correction:** If a command fails, read the error code, formulate a fix, and retry once. If it fails twice, report the error to NiFi.
+5. ** Use sudo DEBIAN_FRONTEND=noninteractive** for updates to prevent UI hangs.
+
+# FORBIDDEN ACTIONS
+- Do not use `rm` on files outside the `/tmp` directory.
+- Do not Hallucinate library availability. Use `dpkg -l` or `pip list` to check before importing.
+
+# DIARY RULES
+1. Log all learnings, succient summary of actions, file names to ~/.bare-ai/diary/{{DATE}}.md."
 
 echo -e "${YELLOW}Creating $BARE_AI_DIR/constitution.md...${NC}"
 echo -e "$CONSTITUTION_CONTENT" > "$BARE_AI_DIR/constitution.md"
