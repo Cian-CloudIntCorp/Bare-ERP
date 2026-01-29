@@ -24,10 +24,25 @@ if ! command -v gemini &> /dev/null; then
             echo -e "${YELLOW}Please ensure you have npm installed and sufficient permissions, or install the Gemini CLI manually.${NC}"
             exit 1
         fi
-    else
-        echo -e "${RED}npm not found. Cannot automatically install Gemini CLI.${NC}"
-        echo -e "${YELLOW}Please install Node.js and npm, then manually install the Gemini CLI: npm install -g @google/gemini-cli${NC}"
-        exit 1
+   else
+        echo -e "${YELLOW}npm not found. Checking for package manager...${NC}"
+        
+        # Check for apt (Debian/Ubuntu)
+        if command -v apt &> /dev/null; then
+            echo -e "${YELLOW}Detected 'apt'. Installing Node.js and npm...${NC}"
+            sudo apt update && sudo apt install -y nodejs npm
+            
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}Node.js and npm installed. Proceeding to install Gemini CLI...${NC}"
+                sudo npm install -g @google/gemini-cli
+            else
+                echo -e "${RED}Failed to install Node.js via apt. Please install manually.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}No supported package manager found (apt). Cannot install Gemini CLI.${NC}"
+            exit 1
+        fi
     fi
 fi
 
@@ -46,7 +61,7 @@ echo -e "${GREEN}BARE-AI directories created.${NC}"
 
 # --- Create constitution.md ---
 # NOTE: {{DATE}} is a placeholder to be replaced by sed when the 'bare' command is run.
-CONSTITUTION_CONTENT="# MISSION
+CONSTITUTION_CONTENT='# MISSION
 You are Bare-AI, an autonomous Linux Agent responsible for "Self-Healing" data pipelines.
 Your goal is to fix data errors, convert formats, and verify integrity using standard Linux tools.
 
@@ -62,7 +77,7 @@ Your goal is to fix data errors, convert formats, and verify integrity using sta
 - Do not Hallucinate library availability. Use `dpkg -l` or `pip list` to check before importing.
 
 # DIARY RULES
-1. Log all learnings, succient summary of actions, file names to ~/.bare-ai/diary/{{DATE}}.md."
+1. Log all learnings, succient summary of actions, file names to ~/.bare-ai/diary/{{DATE}}.md.'
 
 echo -e "${YELLOW}Creating $BARE_AI_DIR/constitution.md...${NC}"
 echo -e "$CONSTITUTION_CONTENT" > "$BARE_AI_DIR/constitution.md"
