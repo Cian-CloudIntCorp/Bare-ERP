@@ -128,7 +128,7 @@ To initialize the agent within your PowerShell environment, follow these steps:
 1.  **API Authentication**:
     Obtain your key from Google AI Studio and add it to your profile:
     ```powershell
-$MY_KEY = "AIzaSyBMJO7Eh9PqUqPHUfF7pQfIyvoNf0SoG4U"
+$MY_KEY = "AIYourKeyHereForNow"
 
 function bare {
     $TODAY = Get-Date -Format "yyyy-MM-dd"
