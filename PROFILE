@@ -127,4 +127,72 @@ To initialize the agent within your PowerShell environment, follow these steps:
 
 1.  **API Authentication**:
     Obtain your key from Google AI Studio and add it to your profile:
-    ```powershel
+    ```powershell
+$MY_KEY = "AIzaSyBMJO7Eh9PqUqPHUfF7pQfIyvoNf0SoG4U"
+
+function bare {
+    $TODAY = Get-Date -Format "yyyy-MM-dd"
+    $BARE_ROOT = Join-Path $env:USERPROFILE ".bare-ai"
+    $CONST_FILE = Join-Path $BARE_ROOT "constitution.md"
+    $TEMP_PY = Join-Path $env:TEMP "bare_bridge.py"
+
+    if (-not (Test-Path $CONST_FILE)) {
+        Write-Error "Constitution missing at $CONST_FILE"
+        return
+    }
+
+    $promptContent = Get-Content $CONST_FILE -Raw
+    $promptContent = $promptContent -replace '{{DATE}}', $TODAY
+
+    @.config/nvm/test/fast/Aliases/'nvm alias' should ignore leading blank lines in the file
+import sys, os, subprocess
+from google import genai
+
+def run():
+    try:
+        sys_prompt = sys.argv[1]
+        api_key_input = sys.argv[2]
+        
+        client = genai.Client(api_key=api_key_input)
+        print("--- STATUS: CONNECTED TO GEMINI 2.0 ---")
+        
+        chat = client.chats.create(model="gemini-2.0-flash")
+        print("Ready for input. Type EXIT to quit.\n")
+        
+        while True:
+            user_input = input("AGENT > ")
+            if user_input.upper() == "EXIT":
+                break
+            
+            full_message = f"{sys_prompt}\n\nUSER REQUEST: {user_input}"
+            response = chat.send_message(full_message)
+            answer = response.text
+            print("\n" + answer + "\n")
+
+            # AUTOMATION LOGIC: Check for PowerShell code blocks
+            if "```powershell" in answer.lower():
+                code = answer.split("```powershell")[1].split("```")[0].strip()
+                confirm = input("CONFIRM: Execute this PowerShell code? (Y/N):")
+                
+                if confirm.upper() == 'Y':
+                    print("--- EXECUTING ---")
+                    # Run the extracted code in a real PowerShell process
+                    result = subprocess.run(["powershell", "-Command", code], capture_output=True, text=True)
+                    
+                    # Display result to you
+                    if result.stdout: print(f"OUTPUT:\n{result.stdout}")
+                    if result.stderr: print(f"ERROR:\n{result.stderr}")
+                    
+                    # Feed the result back to the AI so it knows if it worked
+                    chat.send_message(f"SYSTEM RESULT:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
+                    print("--- SYSTEM STATE UPDATED ---")
+    except Exception as e:
+        print(f"ERROR: {e}")
+
+if __name__ == "__main__":
+    run()
+" @ | Out-File -FilePath $TEMP_PY -Encoding utf8 -Force
+
+    Write-Host "--- BARE-AI INITIALIZING ---" -ForegroundColor Cyan
+    python $TEMP_PY "$promptContent" "$MY_KEY"
+}
